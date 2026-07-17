@@ -5,8 +5,20 @@ const sprites = new Image();
 sprites.src = 'assets/img/anh1.png';
 
 
-canvas.height = 710;
-canvas.width = 630;
+// Kích thước game logic (cố định, không thay đổi)
+const GAME_W = 630;
+const GAME_H = 710;
+
+// Scale canvas xuống cho vừa màn hình → ít pixel hơn → render nhanh hơn
+function setupCanvas() {
+    const scaleX = window.innerWidth  / GAME_W;
+    const scaleY = window.innerHeight / GAME_H;
+    const scale  = Math.min(scaleX, scaleY, 1); // Không scale up quá 1:1
+    canvas.width  = Math.round(GAME_W * scale);
+    canvas.height = Math.round(GAME_H * scale);
+}
+setupCanvas();
+window.addEventListener('resize', setupCanvas);
 
 
 class Bird {
@@ -100,17 +112,15 @@ class Bird {
 
 let game = 'start';
 let frame = 0;
-let bird = new Bird(150, canvas.height / 2 - 12);
+let bird = new Bird(150, GAME_H / 2 - 12);
 
 const start = {
     draw: function () {
         ctx.beginPath();
         // Tăng sX từ 1012 lên 1085 để dịch vùng cắt sang phải, né hình con chim
-        ctx.drawImage(sprites, 1096, 2, 228, 65, canvas.width / 2 - 114, 50, 228, 61);
-        // Tương tự cho chữ Get Ready
-        ctx.drawImage(sprites, 1079, 78, 263, 66, canvas.width / 2 - 118, 200, 236, 64);
-        // Tăng sX từ 855 lên 872 để né cái viền ống nước màu xanh
-        ctx.drawImage(sprites, 871, 157, 197, 150, canvas.width / 2 - 70, 350, 140, 126);
+        ctx.drawImage(sprites, 1096, 2, 228, 65, GAME_W / 2 - 114, 50, 228, 61);
+        ctx.drawImage(sprites, 1079, 78, 263, 66, GAME_W / 2 - 118, 200, 236, 64);
+        ctx.drawImage(sprites, 871, 157, 197, 150, GAME_W / 2 - 70, 350, 140, 126);
     }
 }
 class Ground {
@@ -252,7 +262,7 @@ class Pipes {
         // Kéo dãn thân ống từ dưới miệng chạm xuống đáy màn hình
         let bottomBodyY = bottomMouthY + this.mouth_cH;
         ctx.drawImage(sprites, this.sX, this.body_sY, this.body_sW, this.body_sH,
-            this.cX, bottomBodyY, this.cW, canvas.height - bottomBodyY);
+            this.cX, bottomBodyY, this.cW, GAME_H - bottomBodyY);
     }
 }
 
@@ -339,7 +349,7 @@ class Score {
         }
 
         // 2. Tính toán điểm bắt đầu vẽ (X) sao cho cả cụm điểm số nằm giữa canvas
-        let startX = (canvas.width - totalWidth) / 2;
+        let startX = (GAME_W - totalWidth) / 2;
 
         // 3. Tiến hành vẽ từng số cạnh nhau
         spritesToDraw.forEach(sprite => {
@@ -426,18 +436,23 @@ canvas.addEventListener('click', function (e) {
 
 
 function draw() {
+    // Áp dụng scale để game luôn vẽ trong không gian GAME_W x GAME_H
+    const scale = canvas.width / GAME_W;
+    ctx.save();
+    ctx.scale(scale, scale);
+
     bg.draw();
     if (game == 'start') {
         start.draw();
     }
-    
     drawArrPipes();
     drawArrGround();
     bird.draw();
     if (game == 'play' || game == 'gameover') {
         score.draw();
     }
-    
+
+    ctx.restore();
 }
 
 function update(delta) {
@@ -448,17 +463,23 @@ function update(delta) {
     bird.update(delta);
 }
 
-let lastTime = 0;
-function animate(timestamp = 0) {
+let lastTime = null;
+function animate(timestamp) {
     requestAnimationFrame(animate);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     frame++;
 
-    // Tính delta time, chuẩn hóa về 60fps (16.67ms/frame)
-    // Cap ở 3 để tránh bước nhảy lớn khi tab bị ẩn
+    // Bỏ qua frame đầu tiên để tránh dt khổng lồ khi mới load
+    if (lastTime === null) {
+        lastTime = timestamp;
+        draw();
+        return;
+    }
+
     const dt = timestamp - lastTime;
     lastTime = timestamp;
-    const delta = Math.min(dt / 16.67, 3);
+    // Chuẩn hóa về 60fps, giới hạn tối đa 2x để giảm jitter
+    const delta = Math.min(dt / 16.67, 2);
 
     update(delta);
     draw();
