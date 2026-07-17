@@ -151,8 +151,10 @@ function drawArrGround() {
 }
 
 function updateArrGround() {
-    // Di chuyển toàn bộ các miếng đất sang trái
+    const diff = getDifficulty();
+    // Di chuyển toàn bộ các miếng đất sang trái theo độ khó hiện tại
     arrGround.forEach(ground => {
+        ground.dx = -diff.groundSpeed;
         ground.cX += ground.dx;
     });
 
@@ -172,6 +174,16 @@ function updateArrGround() {
 //  ramdom ống trên và dưới 
 function ramdom(min, max) {
     return Math.ceil(Math.random() * (max - min) + min);
+}
+
+// Hệ thống tăng độ khó theo điểm
+function getDifficulty() {
+    const s = score.value;
+    if      (s < 5)  return { pipeSpeed: 1.5, groundSpeed: 2.0, spaceMin: 220, spaceMax: 260 };
+    else if (s < 10) return { pipeSpeed: 1.9, groundSpeed: 2.4, spaceMin: 200, spaceMax: 240 };
+    else if (s < 15) return { pipeSpeed: 2.3, groundSpeed: 2.8, spaceMin: 180, spaceMax: 220 };
+    else if (s < 20) return { pipeSpeed: 2.7, groundSpeed: 3.2, spaceMin: 165, spaceMax: 200 };
+    else             return { pipeSpeed: 3.2, groundSpeed: 3.8, spaceMin: 150, spaceMax: 185 };
 }
 
 
@@ -246,7 +258,9 @@ function drawArrPipes() {
 }
 
 function updateArrPipes() {
+    const diff = getDifficulty();
     arrPipes.forEach(pipe => {
+        pipe.dx = -diff.pipeSpeed; // Cập nhật tốc độ theo độ khó hiện tại
         pipe.cX += pipe.dx;
     });
 
@@ -254,9 +268,9 @@ function updateArrPipes() {
         let firstPipe = arrPipes.shift();
         firstPipe.cX = arrPipes[arrPipes.length - 1].cX + ramdom(350, 450);
 
-        // Random lại tọa độ khe hở
+        // Random lại tọa độ khe hở theo độ khó hiện tại
         firstPipe.cY = ramdom(80, 300);
-        firstPipe.space = ramdom(220, 260);
+        firstPipe.space = ramdom(diff.spaceMin, diff.spaceMax);
         
         // Reset lại trạng thái tính điểm
         firstPipe.passed = false;
@@ -271,16 +285,16 @@ function updateArrPipes() {
 
 
 const arrNumber = [
-    { name : 0 , sX : 1110 , sY : 224 , sW : 60 , sH : 91 , cW : 62 , cH : 91},
-    { name : 1 , sX : 1168 , sY : 224 , sW : 55 , sH : 91 , cW : 62 , cH : 91},
-    { name : 2 , sX : 1232 , sY : 225 , sW : 50 , sH : 91 , cW : 62 , cH : 91},
-    { name : 3 , sX : 1284 , sY : 230 , sW : 58 , sH : 82 , cW : 62 , cH : 91},
-    { name : 4 , sX : 1112 , sY : 315 , sW : 55 ,sH : 83 , cW : 62 , cH : 91},
-    { name : 5 , sX : 1169 , sY : 315 , sW : 58, sH : 82 , cW : 62 , cH : 91},
-    { name : 6 , sX : 1224 , sY : 312 , sW : 56, sH : 91 , cW : 62 , cH : 91},
-    { name : 7 , sX : 1284 , sY : 315 , sW : 58, sH : 82 , cW : 62 , cH : 91},
-    { name : 8 , sX : 1112 , sY : 397 , sW : 58, sH : 82 , cW : 62 , cH : 91},
-    { name : 9 , sX : 1171 , sY : 399 , sW : 58, sH : 82 , cW : 62 , cH : 91},
+    { name : 0 , sX : 1114 , sY : 232 , sW : 54 , sH : 82 , cW : 54 , cH : 82},
+    { name : 1 , sX : 1171 , sY : 232 , sW : 54 , sH : 82 , cW : 54 , cH : 82},
+    { name : 2 , sX : 1228 , sY : 232 , sW : 54 , sH : 82 , cW : 54 , cH : 82},
+    { name : 3 , sX : 1285 , sY : 232 , sW : 54 , sH : 82 , cW : 54 , cH : 82},
+    { name : 4 , sX : 1114 , sY : 316 , sW : 54 , sH : 81 , cW : 54 , cH : 82},
+    { name : 5 , sX : 1171 , sY : 316 , sW : 54 , sH : 81 , cW : 54 , cH : 82},
+    { name : 6 , sX : 1228 , sY : 316 , sW : 54 , sH : 81 , cW : 54 , cH : 82},
+    { name : 7 , sX : 1285 , sY : 316 , sW : 54 , sH : 81 , cW : 54 , cH : 82},
+    { name : 8 , sX : 1114 , sY : 400 , sW : 54 , sH : 81 , cW : 54 , cH : 82},
+    { name : 9 , sX : 1171 , sY : 400 , sW : 54 , sH : 81 , cW : 54 , cH : 82},
 ];
 
 
