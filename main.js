@@ -65,8 +65,8 @@ class Bird {
         this.cH = 40;
         this.i = 0;
 
-        this.v =0;
-        this.a = 0.08;
+        this.v = 0;
+        this.a = 0.25; // Trọng lực (Flappy Bird gốc: ~0.25)
     }
 
     draw() {
@@ -440,7 +440,7 @@ function handleInput() {
             game = 'play';
             break;
         case 'play':
-            bird.v = -3.5;
+            bird.v = -6; // Lực nhảy (Flappy Bird gốc: ~-6)
             break;
         case 'gameover':
             game = 'start';
