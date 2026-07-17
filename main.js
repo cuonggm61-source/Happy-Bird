@@ -9,13 +9,10 @@ sprites.src = 'assets/img/anh1.png';
 const GAME_W = 630;
 const GAME_H = 710;
 
-// Scale canvas xuống cho vừa màn hình → ít pixel hơn → render nhanh hơn
+// Canvas lấp đầy toàn màn hình → không có khoảng trống
 function setupCanvas() {
-    const scaleX = window.innerWidth  / GAME_W;
-    const scaleY = window.innerHeight / GAME_H;
-    const scale  = Math.min(scaleX, scaleY, 1); // Không scale up quá 1:1
-    canvas.width  = Math.round(GAME_W * scale);
-    canvas.height = Math.round(GAME_H * scale);
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
 }
 setupCanvas();
 window.addEventListener('resize', setupCanvas);
@@ -436,9 +433,16 @@ canvas.addEventListener('click', function (e) {
 
 
 function draw() {
-    // Áp dụng scale để game luôn vẽ trong không gian GAME_W x GAME_H
-    const scale = canvas.width / GAME_W;
+    const scale   = Math.min(canvas.width / GAME_W, canvas.height / GAME_H, 1);
+    const offsetX = (canvas.width  - GAME_W * scale) / 2;
+    const offsetY = (canvas.height - GAME_H * scale) / 2;
+
+    // Fill toàn bộ canvas bằng màu sky → xóa frame cũ và lấp đầy khoảng trống xung quanh
+    ctx.fillStyle = '#70c5ce';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
     ctx.save();
+    ctx.translate(offsetX, offsetY);
     ctx.scale(scale, scale);
 
     bg.draw();
@@ -466,7 +470,7 @@ function update(delta) {
 let lastTime = null;
 function animate(timestamp) {
     requestAnimationFrame(animate);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Không cần clearRect → draw() đã fill toàn canvas mỗi frame
     frame++;
 
     // Bỏ qua frame đầu tiên để tránh dt khổng lồ khi mới load
