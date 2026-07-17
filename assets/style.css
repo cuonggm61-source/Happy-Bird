@@ -1,0 +1,12 @@
+body {
+    display: flex;
+    justify-content: center; /* Căn giữa theo chiều ngang */
+    align-items: center;     /* Căn giữa theo chiều dọc */
+    height: 100vh;           /* Chiều cao bằng 100% màn hình */
+    margin: 0;
+    background-color: #333;  /* Thêm màu nền tối cho dễ nhìn */
+}
+
+.canvas {
+    border: 2px solid black; /* Thêm đường viền cho dễ phân biệt */
+}
