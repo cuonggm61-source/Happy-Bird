@@ -2,7 +2,6 @@ const canvas = document.querySelector('.canvas');
 const ctx = canvas.getContext('2d');
 
 const sprites = new Image();
-sprites.src = 'assets/img/anh1.png';
 
 
 // Kích thước game logic (cố định, không thay đổi)
@@ -13,12 +12,40 @@ const GAME_H = 710;
 function setupCanvas() {
     const scaleX = window.innerWidth  / GAME_W;
     const scaleY = window.innerHeight / GAME_H;
-    const scale  = Math.min(scaleX, scaleY, 1); // Không scale up quá 1:1
+    const scale  = Math.min(scaleX, scaleY, 1);
     canvas.width  = Math.round(GAME_W * scale);
     canvas.height = Math.round(GAME_H * scale);
 }
 setupCanvas();
 window.addEventListener('resize', setupCanvas);
+
+// ====================================================
+// PRE-RENDER MỘT LẦN → mỗi frame chỉ drawImage ảnh nhỏ
+// ====================================================
+const bgCache     = document.createElement('canvas');
+bgCache.width     = GAME_W;
+bgCache.height    = 625;
+const bgCacheCtx  = bgCache.getContext('2d');
+
+const pipeTopCache    = document.createElement('canvas');
+pipeTopCache.width    = 82;  // pipe cW
+pipeTopCache.height   = 40;  // pipe mouth_cH
+const pipeTopCacheCtx = pipeTopCache.getContext('2d');
+
+let assetsReady = false;
+
+sprites.onload = function () {
+    // 1. Pre-render background (1px overlap giữa các tile)
+    bgCacheCtx.drawImage(sprites, 163, 0, 229, 625,   0, 0, 230, 625);
+    bgCacheCtx.drawImage(sprites, 163, 0, 229, 625, 229, 0, 230, 625);
+    bgCacheCtx.drawImage(sprites, 163, 0, 229, 625, 458, 0, 172, 625);
+    // 2. Pre-render miệng ống trên (đã lật ngược sẵn)
+    pipeTopCacheCtx.translate(0, 40);
+    pipeTopCacheCtx.scale(1, -1);
+    pipeTopCacheCtx.drawImage(sprites, 0, 0, 52, 26, 0, 0, 82, 40);
+    assetsReady = true;
+};
+sprites.src = 'assets/img/anh1.png';
 
 
 class Bird {
@@ -245,13 +272,17 @@ class Pipes {
         ctx.drawImage(sprites, this.sX, this.body_sY, this.body_sW, this.body_sH,
             this.cX, 0, this.cW, topMouthY);
 
-        // Vẽ miệng ống (Dùng hàm lật ngược hình của Canvas)
-        ctx.save();
-        ctx.translate(this.cX, this.cY); // Dời tâm về mép dưới ống trên
-        ctx.scale(1, -1); // Lật ngược trục Y
-        ctx.drawImage(sprites, this.sX, this.mouth_sY, this.mouth_sW, this.mouth_sH,
-            0, 0, this.cW, this.mouth_cH);
-        ctx.restore();
+        // Vẽ miệng ống trên (dùng cache đã lật sẵn → không cần save/scale/restore)
+        if (assetsReady) {
+            ctx.drawImage(pipeTopCache, this.cX, topMouthY);
+        } else {
+            ctx.save();
+            ctx.translate(this.cX, this.cY);
+            ctx.scale(1, -1);
+            ctx.drawImage(sprites, this.sX, this.mouth_sY, this.mouth_sW, this.mouth_sH,
+                0, 0, this.cW, this.mouth_cH);
+            ctx.restore();
+        }
 
         // --- 2. VẼ ỐNG DƯỚI ---
         let bottomMouthY = this.cY + this.space;
@@ -392,10 +423,14 @@ const bg = {
     cW: 229,
     cH: 625,
     draw: function () {
-        // Mỗi tile chồng lên 1px → lấp khe hở sub-pixel khi scale, giữ nguyên độ sắc nét
-        ctx.drawImage(sprites, this.sX, this.sY, this.sW, this.sH,   0, 0, 230, this.cH);
-        ctx.drawImage(sprites, this.sX, this.sY, this.sW, this.sH, 229, 0, 230, this.cH);
-        ctx.drawImage(sprites, this.sX, this.sY, this.sW, this.sH, 458, 0, 172, this.cH);
+        if (assetsReady) {
+            // 1 drawImage từ cache nhỏ thay vì 3 drawImage từ sprite 1343px
+            ctx.drawImage(bgCache, 0, 0);
+        } else {
+            ctx.drawImage(sprites, 163, 0, 229, 625,   0, 0, 230, 625);
+            ctx.drawImage(sprites, 163, 0, 229, 625, 229, 0, 230, 625);
+            ctx.drawImage(sprites, 163, 0, 229, 625, 458, 0, 172, 625);
+        }
     }
 }
 
@@ -436,6 +471,9 @@ canvas.addEventListener('click', function (e) {
 
 
 function draw() {
+    // Tắt anti-aliasing → pixel art sắc nét hơn và render nhanh hơn
+    ctx.imageSmoothingEnabled = false;
+
     // Áp dụng scale để game luôn vẽ trong không gian GAME_W x GAME_H
     const scale = canvas.width / GAME_W;
     ctx.save();
