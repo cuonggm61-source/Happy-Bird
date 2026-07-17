@@ -51,10 +51,10 @@ class Bird {
         ctx.drawImage(sprites, this.animate[this.i].sX, this.animate[this.i].sY, this.sW, this.sH, this.cX, this.cY,
             this.cW, this.cH);
     }
-    update(){
+    update(delta = 1){
        if(game == 'play'){
-            this.v += this.a;
-            this.cY += this.v;
+            this.v += this.a * delta;
+            this.cY += this.v * delta;
 
         
         // Kiểm tra va chạm với nền đất
@@ -150,12 +150,12 @@ function drawArrGround() {
     arrGround.forEach(ground => ground.draw());
 }
 
-function updateArrGround() {
+function updateArrGround(delta = 1) {
     const diff = getDifficulty();
     // Di chuyển toàn bộ các miếng đất sang trái theo độ khó hiện tại
     arrGround.forEach(ground => {
         ground.dx = -diff.groundSpeed;
-        ground.cX += ground.dx;
+        ground.cX += ground.dx * delta;
     });
 
     // Nếu miếng đất đầu tiên trôi hoàn toàn ra khỏi màn hình (vượt qua mức -199)
@@ -257,11 +257,11 @@ function drawArrPipes() {
     arrPipes.forEach(pipe => pipe.draw());
 }
 
-function updateArrPipes() {
+function updateArrPipes(delta = 1) {
     const diff = getDifficulty();
     arrPipes.forEach(pipe => {
         pipe.dx = -diff.pipeSpeed; // Cập nhật tốc độ theo độ khó hiện tại
-        pipe.cX += pipe.dx;
+        pipe.cX += pipe.dx * delta;
     });
 
     if (arrPipes[0].cX <= -82) { // 82 là cW của ống
@@ -419,21 +419,28 @@ function draw() {
     
 }
 
-function update() {
+function update(delta) {
     if (game == 'play') {
-        updateArrPipes();
-        updateArrGround();
+        updateArrPipes(delta);
+        updateArrGround(delta);
     }
-    bird.update();
+    bird.update(delta);
 }
 
-function animate() {
-
+let lastTime = 0;
+function animate(timestamp = 0) {
     requestAnimationFrame(animate);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     frame++;
-    update();
+
+    // Tính delta time, chuẩn hóa về 60fps (16.67ms/frame)
+    // Cap ở 3 để tránh bước nhảy lớn khi tab bị ẩn
+    const dt = timestamp - lastTime;
+    lastTime = timestamp;
+    const delta = Math.min(dt / 16.67, 3);
+
+    update(delta);
     draw();
 }
-animate();
+requestAnimationFrame(animate);
 
