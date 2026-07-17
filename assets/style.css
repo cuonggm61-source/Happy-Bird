@@ -1,12 +1,38 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;            /* Chặn scroll */
+    background-color: #222;
+    touch-action: none;          /* Chặn pinch-zoom & scroll khi chạm */
+    user-select: none;           /* Không cho chọn text khi tap */
+    -webkit-user-select: none;
+}
+
 body {
     display: flex;
-    justify-content: center; /* Căn giữa theo chiều ngang */
-    align-items: center;     /* Căn giữa theo chiều dọc */
-    height: 100vh;           /* Chiều cao bằng 100% màn hình */
-    margin: 0;
-    background-color: #333;  /* Thêm màu nền tối cho dễ nhìn */
+    justify-content: center;
+    align-items: center;
+    height: 100dvh;              /* Dynamic viewport height cho mobile */
 }
 
 .canvas {
-    border: 2px solid black; /* Thêm đường viền cho dễ phân biệt */
+    display: block;
+    /* Scale canvas vừa màn hình, giữ tỉ lệ */
+    max-width: 100vw;
+    max-height: 100dvh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    /* Hardware acceleration */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: transform;
+    image-rendering: pixelated;  /* Pixel art sắc nét */
+    touch-action: none;          /* Chặn mọi gesture trên canvas */
 }

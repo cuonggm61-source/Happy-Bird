@@ -176,14 +176,25 @@ function ramdom(min, max) {
     return Math.ceil(Math.random() * (max - min) + min);
 }
 
-// Hệ thống tăng độ khó theo điểm
+// Cache độ khó để tránh tạo object mới mỗi frame
+const DIFFICULTY_LEVELS = [
+    { threshold: 0,  pipeSpeed: 1.5, groundSpeed: 2.0, spaceMin: 220, spaceMax: 260 },
+    { threshold: 5,  pipeSpeed: 1.9, groundSpeed: 2.4, spaceMin: 200, spaceMax: 240 },
+    { threshold: 10, pipeSpeed: 2.3, groundSpeed: 2.8, spaceMin: 180, spaceMax: 220 },
+    { threshold: 15, pipeSpeed: 2.7, groundSpeed: 3.2, spaceMin: 165, spaceMax: 200 },
+    { threshold: 20, pipeSpeed: 3.2, groundSpeed: 3.8, spaceMin: 150, spaceMax: 185 },
+];
+
 function getDifficulty() {
     const s = score.value;
-    if      (s < 5)  return { pipeSpeed: 1.5, groundSpeed: 2.0, spaceMin: 220, spaceMax: 260 };
-    else if (s < 10) return { pipeSpeed: 1.9, groundSpeed: 2.4, spaceMin: 200, spaceMax: 240 };
-    else if (s < 15) return { pipeSpeed: 2.3, groundSpeed: 2.8, spaceMin: 180, spaceMax: 220 };
-    else if (s < 20) return { pipeSpeed: 2.7, groundSpeed: 3.2, spaceMin: 165, spaceMax: 200 };
-    else             return { pipeSpeed: 3.2, groundSpeed: 3.8, spaceMin: 150, spaceMax: 185 };
+    let level = DIFFICULTY_LEVELS[0];
+    for (let i = DIFFICULTY_LEVELS.length - 1; i >= 0; i--) {
+        if (s >= DIFFICULTY_LEVELS[i].threshold) {
+            level = DIFFICULTY_LEVELS[i];
+            break;
+        }
+    }
+    return level;
 }
 
 
@@ -378,30 +389,40 @@ const bg = {
     }
 }
 
-canvas.addEventListener('click', function () {
+function handleInput() {
     switch (game) {
         case 'start':
             game = 'play';
             break;
         case 'play':
-            console.log('bay len');
             bird.v = -3.5;
             break;
         case 'gameover':
-            console.log('tro lai');
             game = 'start';
             bird.v = 0;
             bird.cY = canvas.height / 2 - 12;
             bird.i = 0;
             score.value = 0;
-            arrPipes.length = 0; // Xóa ống hiện tại
+            arrPipes.length = 0;
             for (let i = 1; i < 4; i++) {
                 let pipe = new Pipes(ramdom(500, 600) * i, ramdom(80, 300), 250);
                 arrPipes.push(pipe);
             }
             break;
     }
-})
+}
+
+// Dùng pointerdown thay cho click: không có 300ms delay, hoạt động trên cả touch lẫn chuột
+canvas.addEventListener('pointerdown', function (e) {
+    e.preventDefault(); // Chặn scroll / zoom khi chạm
+    handleInput();
+});
+
+// Giữ click cho môi trường không hỗ trợ pointer events
+canvas.addEventListener('click', function (e) {
+    e.preventDefault();
+    handleInput();
+});
 
 
 function draw() {
