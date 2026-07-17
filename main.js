@@ -392,10 +392,8 @@ const bg = {
     cW: 229,
     cH: 625,
     draw: function () {
-        ctx.beginPath();
-        ctx.drawImage(sprites, this.sX, this.sY, this.sW, this.sH, this.cX, this.cY, this.cW, this.cH);
-        ctx.drawImage(sprites, this.sX, this.sY, this.sW, this.sH, this.cX + 229, this.cY, this.cW, this.cH);
-        ctx.drawImage(sprites, this.sX, this.sY, this.sW, this.sH, this.cX + 458, this.cY, this.cW, this.cH);
+        // Kéo dãn 1 tấm để phủ toàn GAME_W → không còn khe hở sub-pixel giữa các tile
+        ctx.drawImage(sprites, this.sX, this.sY, this.sW, this.sH, 0, 0, GAME_W, this.cH);
     }
 }
 
